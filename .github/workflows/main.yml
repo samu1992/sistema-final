@@ -1,16 +1,28 @@
-name: CI/CD a Docker Hub
+name: CI/CD con Versionado Pro
 
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v*.*.*" ] # Se activa cuando subís tags como v1.0.0, v1.1.0, etc.
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout del código
       uses: actions/checkout@v4
+
+    # --- PASO NUEVO: EXTRAER METADATOS ---
+    # Este paso calcula automáticamente qué etiquetas ponerle a la imagen
+    - name: Extraer metadatos de Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKER_USERNAME }}/backend
+        tags: |
+          type=semver,pattern={{version}}
+          type=raw,value=latest
 
     - name: Login en Docker Hub
       uses: docker/login-action@v3
@@ -18,21 +30,23 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    # Construimos una imagen temporal para que Trivy la pueda escanear
     - name: Construir Imagen (para escaneo)
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest ./backend
+      run: docker build -t backend:test ./backend
 
     - name: Escaneo de Seguridad con Trivy
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: '${{ secrets.DOCKER_USERNAME }}/backend:latest'
+        image-ref: 'backend:test'
         format: 'table'
-        exit-code: '1' # Frena el camión si hay rojos (High/Critical)
+        exit-code: '1'
         ignore-unfixed: true
         severity: 'CRITICAL,HIGH'
 
+    # El paso final usa los tags que calculó el paso "meta" de arriba
     - name: Subir Imagen a Docker Hub
       uses: docker/build-push-action@v5
       with:
-        context: ./backend # Apuntamos a tu carpeta backend
+        context: ./backend
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/backend:latest
+        tags: ${{ steps.meta.outputs.tags }}
