@@ -1,9 +1,9 @@
-name: CI/CD con Versionado Pro
+name: CI/CD a AWS ECR (Bunker Privado)
 
 on:
   push:
     branches: [ "main" ]
-    tags: [ "v*.*.*" ] # Se activa cuando subís tags como v1.0.0, v1.1.0, etc.
+    tags: [ "v*.*.*" ]
 
 jobs:
   build-and-push:
@@ -13,28 +13,36 @@ jobs:
     - name: Checkout del código
       uses: actions/checkout@v4
 
-    # --- PASO NUEVO: EXTRAER METADATOS ---
-    # Este paso calcula automáticamente qué etiquetas ponerle a la imagen
+    # 1. Nos ponemos el uniforme de AWS (Autenticación)
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # 2. Le pedimos permiso al portero de ECR
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # 3. Preparamos las etiquetas (v1.0.2, latest, etc)
     - name: Extraer metadatos de Docker
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ secrets.DOCKER_USERNAME }}/backend
+        # Usamos tu URL real de AWS que sacamos del ARN
+        images: 120415017560.dkr.ecr.us-east-2.amazonaws.com/sistema-final-backend
         tags: |
           type=semver,pattern={{version}}
           type=raw,value=latest
 
-    - name: Login en Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    # Construimos una imagen temporal para que Trivy la pueda escanear
+    # 4. Construimos una imagen local para que Trivy la revise
     - name: Construir Imagen (para escaneo)
       run: docker build -t backend:test ./backend
 
-    - name: Escaneo de Seguridad con Trivy
+    # 5. Escaneo de Seguridad (¡No entra nada roto al búnker!)
+    - name: Escaneo con Trivy
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'backend:test'
@@ -43,8 +51,8 @@ jobs:
         ignore-unfixed: true
         severity: 'CRITICAL,HIGH'
 
-    # El paso final usa los tags que calculó el paso "meta" de arriba
-    - name: Subir Imagen a Docker Hub
+    # 6. El Empuje Final a AWS
+    - name: Subir Imagen a AWS ECR
       uses: docker/build-push-action@v5
       with:
         context: ./backend
