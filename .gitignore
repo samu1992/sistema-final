@@ -1,0 +1,12 @@
+# Ignorar logs de Nginx y otros
+logs/
+
+# Ignorar caché de Python
+backend/__pycache__/
+backend/*.pyc
+
+# Ignorar base de datos de Redis (si alguna vez mapeás la carpeta localmente)
+redis-data/
+
+# Ignorar variables de entorno secretas
+.env

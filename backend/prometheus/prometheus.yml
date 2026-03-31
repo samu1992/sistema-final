@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 5s # Va a buscar datos muy seguido para que lo veas rápido
+
+scrape_configs:
+  - job_name: 'bunker-metrics'
+    static_configs:
+      - targets: ['backend:8001'] # Le decimos que busque en el puerto de métricas

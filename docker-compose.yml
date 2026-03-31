@@ -3,33 +3,74 @@ services:
     image: nginx:alpine
     container_name: sf-nginx
     ports:
-      - "8080:80"   # SOLO NGINX expuesto al host
+      - "8080:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./logs/nginx:/var/log/nginx
     depends_on:
       - backend
     networks:
       - red-privada
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
 
   backend:
     build: ./backend
     container_name: sf-backend
     environment:
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_PORT=6379  # Corregido de RED5 a REDIS
     depends_on:
       - redis
     networks:
       - red-privada
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:alpine
     container_name: sf-redis
-    # NO ports acá -> no se expone al host
     volumes:
       - redis-data:/data
     networks:
       - red-privada
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+
+  # ESTO ESTABA AFUERA, AHORA ESTÁ ADENTRO DE SERVICES
+  prometheus:
+    image: prom/prometheus
+    container_name: sf-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - red-privada
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
 networks:
   red-privada:
