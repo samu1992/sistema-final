@@ -10,3 +10,7 @@ redis-data/
 
 # Ignorar variables de entorno secretas
 .env
+
+# Binarios de Kubernetes
+k8s/kubectl
+k8s/minikube-linux-amd64
