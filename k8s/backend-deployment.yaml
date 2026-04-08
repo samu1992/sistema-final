@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-bot
+spec:
+  replicas: 2 # Empezamos con 2 para tener alta disponibilidad
+  selector:
+    matchLabels:
+      app: crypto-bot
+  template:
+    metadata:
+      labels:
+        app: crypto-bot
+    spec:
+      containers:
+      - name: python-app
+        image: nginx:alpine # Usamos nginx de prueba, luego será tu imagen de Python
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
