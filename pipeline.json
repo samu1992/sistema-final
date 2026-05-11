@@ -1,0 +1,51 @@
+{
+    "pipeline": {
+        "name": "Pipeline-Bot-Samuel",
+        "roleArn": "arn:aws:iam::120415017560:role/SamuelCodeBuildRole",
+        "artifactStore": {
+            "type": "S3",
+            "location": "bunker-artifacts-samuel-1992"
+        },
+        "stages": [
+            {
+                "name": "Source",
+                "actions": [
+                    {
+                        "name": "GitHub_Source",
+                        "actionTypeId": {
+                            "category": "Source",
+                            "owner": "AWS",
+                            "provider": "CodeStarSourceConnection",
+                            "version": "1"
+                        },
+                        "outputArtifacts": [{"name": "SourceArtifact"}],
+                        "configuration": {
+                            "ConnectionArn": "arn:aws:codeconnections:us-east-2:120415017560:connection/9422e13b-cda1-413f-b5a0-3978430a30de",
+                            "FullRepositoryId": "samu1992/sistema-final",
+                            "BranchName": "main"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "Build",
+                "actions": [
+                    {
+                        "name": "Build_Action",
+                        "actionTypeId": {
+                            "category": "Build",
+                            "owner": "AWS",
+                            "provider": "CodeBuild",
+                            "version": "1"
+                        },
+                        "inputArtifacts": [{"name": "SourceArtifact"}],
+                        "outputArtifacts": [{"name": "BuildArtifact"}],
+                        "configuration": {
+                            "ProjectName": "Proyecto-Bot-Samuel"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
