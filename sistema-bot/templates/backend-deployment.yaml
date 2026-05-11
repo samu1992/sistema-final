@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crypto-bot
+  template:
+    metadata:
+      labels:
+        app: crypto-bot
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - crypto-bot
+              topologyKey: "kubernetes.io/hostname"
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        # ... resto del archivo
+        command: ['sh', '-c', "until nc -zv {{ .Release.Name }}-postgres 5432; do echo waiting for postgres; sleep 2; done"]
+      containers:
+      - name: python-app
+        image: nginx:alpine
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5  # Espera 5 segundos antes del primer chequeo
+          periodSeconds: 10       # Chequea cada 10 segundos
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            memory: "256Mi" # Aumentamos un poco para estar cómodos
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "250m"

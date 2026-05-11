@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-allow-bot
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres # A quién protege esta regla
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: crypto-bot # Único inquilino autorizado
+    ports:
+    - protocol: TCP
+      port: 5432
