@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Iniciando fase de Pre-Build..."
+      - echo "Logueándose en Amazon ECR..."
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 120415017560.dkr.ecr.us-east-1.amazonaws.com
+      - REPOSITORY_URI=120415017560.dkr.ecr.us-east-1.amazonaws.com/bot-trading-repo
+      - IMAGE_TAG=latest
+  build:
+    commands:
+      - echo "Construyendo la imagen de Docker desde la carpeta backend..."
+      - docker build -t $REPOSITORY_URI:latest ./backend
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo "Construcción terminada el `date`"
+      - echo "Subiendo la imagen a ECR..."
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Escribiendo archivo de definiciones para el despliegue..."
+      - printf '[{"name":"contenedor-bot","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+
+artifacts:
+    files: imagedefinitions.json
