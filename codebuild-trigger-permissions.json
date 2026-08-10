@@ -1,0 +1,13 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "codebuild:StartBuild",
+                "codebuild:BatchGetBuilds"
+            ],
+            "Resource": "arn:aws:codebuild:us-east-1:120415017560:project/Proyecto-Bot-Samuel"
+        }
+    ]
+}
