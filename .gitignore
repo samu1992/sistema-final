@@ -14,3 +14,6 @@ redis-data/
 # Binarios de Kubernetes
 k8s/kubectl
 k8s/minikube-linux-amd64
+# archivos pesados de terraform
+terraform/.terraform/
+terraform/*.tfstate*

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: backend-bot
 spec:
-  replicas: 2 # Empezamos con 2 para tener alta disponibilidad
+  replicas: 2
   selector:
     matchLabels:
       app: crypto-bot
@@ -14,7 +14,10 @@ spec:
     spec:
       containers:
       - name: python-app
-        image: nginx:alpine # Usamos nginx de prueba, luego será tu imagen de Python
+        # LA IMAGEN REAL DE TU BOT EN ECR:
+        image: 120415017560.dkr.ecr.us-east-2.amazonaws.com/sistema-final-backend:latest
+        ports:
+        - containerPort: 8000
         resources:
           limits:
             memory: "128Mi"
