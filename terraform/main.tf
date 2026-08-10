@@ -19,13 +19,14 @@ module "vpc" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0" # SALTO A LA VERSIÓN 20 (COMPATIBLE CON AWS v5)
+#  version = "~> 20.0"
 
   cluster_name    = "cluster-bot-trading"
- #cluster_version = "1.29" # Versión de K8s actualizada
+  
+  # Con esta sola línea le damos acceso de admin al usuario actual sin duplicados
+  enable_cluster_creator_admin_permissions = true
 
-  # Habilitamos el acceso desde tu GitHub Actions
-  cluster_endpoint_public_access  = true
+  cluster_endpoint_public_access = true
 
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets

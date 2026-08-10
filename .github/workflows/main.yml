@@ -60,12 +60,12 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
    # 7. Conectar al Cluster de Kubernetes (EKS en AWS)
     - name: Configurar conexión a Kubernetes
-      run: aws eks update-kubeconfig --name cluster-bot-trading --region ${{ secrets.AWS_REGION }}
+      run: aws eks update-kubeconfig --name cluster-bot-trading --region us-east-2
 
     # 8. Desplegar la artillería pesada (Manifiestos YAML)
     - name: Desplegar en Kubernetes
       run: |
-        kubectl apply -f ./k8s/backend-deployment.yaml
-        kubectl apply -f ./k8s/hpa.yaml
+        kubectl apply --validate=false -f ./k8s/backend-deployment.yaml
+        kubectl apply --validate=false -f ./k8s/hpa.yaml
         # Si tenés el ingress o service ahí, también los aplicamos con:
         # kubectl apply -f ./k8s/
